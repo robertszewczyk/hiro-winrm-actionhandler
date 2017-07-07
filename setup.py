@@ -24,8 +24,10 @@ Windows hosts via the WinRM protocol.
 		"Topic :: Utilities",
 		"License :: OSI Approved :: MIT License",
 	],
-	install_requires=['arago-pyactionhandler-winrm'],
+	install_requires=['arago-pyactionhandler'],
 	scripts=['bin/hiro-winrm-actionhandler.py'],
+	packages=['arago.pyactionhandler.plugins.winrm',
+			  'arago.pyactionhandler.plugins.winrm.auth.kerberos'
 	data_files=[
 		(
 			'/opt/autopilot/conf/external_actionhandlers/',
