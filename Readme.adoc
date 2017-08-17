@@ -2,7 +2,6 @@
 Marcus Klemm
 
 :icons: font
-:source-highlighter: coderay
 :toc:
 
 
@@ -12,21 +11,23 @@ Marcus Klemm
 
 ==== Activate the SCL channel/repository ====
 * On RHEL, execute
-[source,sh]
+
+[source,console]
 ----
 subscription-manager repos --enable rhel-6-server-optional-rpms
 subscription-manager repos --enable rhel-server-rhscl-6-rpms
 ----
 
 * On CentOS, execute
-[source,sh]
+
+[source,console]
 ----
 yum -y install centos-release-scl-rh
 ----
 
 ==== Add the hiro-contrib repository ====
 Add the following to your `/etc/yum.repos.d/hiro.repo` file:
-[source,conf]
+[source,ini]
 ----
 [hiro-contrib]
 name=arago HIRO contributions
@@ -58,7 +59,7 @@ you must replace them with the proper http://www.w3schools.com/tags/ref_urlencod
 ====
 
 ==== Install and start the ActionHandler ====
-[source,sh]
+[source,console]
 ----
 yum install hiro_integration-winrm-actionhandler
 
@@ -75,6 +76,7 @@ This part is not finished, yet.
 
 === Configure the HIRO Engine ===
 Add the following section to your `/opt/autopilot/conf/aae.yaml` and restart the engine.
+
 [source,yaml]
 ----
 ActionHandlers:
@@ -89,7 +91,7 @@ ActionHandlers:
 To adjust the number of actions that can be executed concurrently
 (both in total and per MARSNode), edit
 `/opt/autopilot/conf/external_actionhandlers/winrm-actionhandler.conf`
-[source,conf]
+[source,ini]
 ----
 [ActionHandler]
 ZMQ_URL: tcp://*:7289
@@ -107,7 +109,7 @@ WorkerMaxIdle: 300
 |====
 
 To apply the changes, restart the ActionHandler
-[source,sh]
+[source,console]
 ----
 service hiro-winrm-actionhandler restart
 ----
