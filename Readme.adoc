@@ -78,11 +78,11 @@ Add the following section to your `/opt/autopilot/conf/aae.yaml` and restart the
 [source,yaml]
 ----
 ActionHandlers:
-	ActionHandler:
-	  - URL: tcp://127.0.0.1:7289
-		  SubscribeURL: ''
-		  CapabilityYAML: /opt/autopilot/conf/external_actionhandlers/capabilities/winrm-actionhandler.yaml
-		  RequestTimeout: 60
+  ActionHandler:
+    - URL: tcp://127.0.0.1:7289
+      SubscribeURL: ''
+      CapabilityYAML: /opt/autopilot/conf/external_actionhandlers/capabilities/winrm-actionhandler.yaml
+      RequestTimeout: 60
 ----
 
 === Configure the WinRM ActionHandler ===
