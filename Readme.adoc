@@ -91,6 +91,11 @@ ActionHandlers:
       RequestTimeout: 60
 ----
 
+[IMPORTANT]
+====
+If you're still using HIRO 5.3.x, replace `CapabilityYAML` by `CapabilityXML` and `winrm-actionhandler.yaml` by `winrm-actionhandler.xml`
+====
+
 === Configure the WinRM ActionHandler ===
 To adjust the number of actions that can be executed concurrently
 (both in total and per MARSNode), edit
