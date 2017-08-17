@@ -134,7 +134,7 @@ Both capabilities support the execution of small scripts in their
 respective language (DOS batch or Powershell).
 
 IMPORTANT: The length of the whole script including all whitespace and line breaks
-must not exceed 4096 characters.
+must not exceed 5500 characters.
 
 `ExecuteCommand` is named exactly like in the Unix ActionHandler for
 a reason: It does the same thing, executing a command.
