@@ -15,15 +15,16 @@ toc::[]
 
 === Network Requirements
 
+ - HIRO Engine Node \<\-> HIRO Repository (for ActionHandler Components)
  - HIRO Engine Node \<\-> CentOS Repository (for Kerberos Workstation Components)
  - HIRO Engine Node \<\-> CentOS SCL Repository (during installation)
- - HIRO Engine Node \<\-> Windows Targets on ports 5985 (HTTP) and/or 5986 (HTTPS) 
+ - HIRO Engine Node \<\-> Windows Targets on ports 5985 (HTTP) and/or 5986 (HTTPS)
  - HIRO Engine Node \<\-> Windows Domain Controller on Kerberos Ports
 
 === Permissions
 
  - An AD Account that is part of the Domain Administrators group
- 
+
 == WinRM ActionHandler Installation
 
 Activate the SCL repository:
@@ -142,7 +143,7 @@ TIP: link:http://www.itadmintools.com/2011/07/creating-kerberos-keytab-files.htm
 
 The default location for keytabs is `/opt/autopilot/conf/external_actionhandlers/keytabs/`.
 
-Test Keytab from Jumpserver:
+Test Keytab file:
 [source,console]
 ----
 kinit -k -t /path/to/Keytab user@DOMAIN
@@ -286,7 +287,7 @@ This error was encountered when the password for the user (or principal) was ent
 === Keytab Creation Troubleshooting
 
 ```
-kinit: Keytab contains no suitable keys for host/jumpserver.winlab.local@WINLAB.LOCAL while getting initial credentials
+kinit: Keytab contains no suitable keys for host/fqdn.local@FQDN.LOCAL while getting initial credentials
 ```
 Command entered may be missing the principal (did not have username@DOMAIN) but instead had just the keytab
 
@@ -313,7 +314,7 @@ Make sure user is both a local and domain administrator.
 
 === Additional ActionHandler Troubleshooting
 
-A log is kept in /var/log/autopilot/engine/winrm-handler.log on the Jumpserver which could contain useful troubleshooting information.
+A log is kept in `/var/log/autopilot/engine/winrm-handler.log` which could contain useful troubleshooting information.
 
 We encountered an issue in where we received HTTP 503 when trying to execute a command against a target Windows Server. This was because HTTP_PROXY was set on the HIRO Engine Node and was intercepting HTTP traffic (even if it was on port 5985). Adding unset http_proxy to the init script resolved this issue temporarily and a feature request was logged so that this could be resolved in the future.
 
