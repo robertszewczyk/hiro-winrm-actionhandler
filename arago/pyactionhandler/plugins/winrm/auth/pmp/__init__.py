@@ -1,3 +1,5 @@
+from arago.pyactionhandler.plugins.winrm.session import Session
+import winrm
 
 
 class PMPSession(Session):

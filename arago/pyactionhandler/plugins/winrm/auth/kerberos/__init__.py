@@ -1,6 +1,7 @@
 from arago.pyactionhandler.plugins.winrm.session import Session
 import winrm
 
+
 class krb5Session(Session):
 	def __init__(self, endpoint, target=None, validation='ignore', **kwargs):
 		self.protocol = winrm.Protocol(
