@@ -22,12 +22,13 @@ class WinRMCmdAction(Action):
 			node=self.parameters['Hostname'])
 
 	@staticmethod
-	def init_direct_session(host, port, protocol):
+	def init_direct_session(host, port, protocol, **kwargs):
 		return krb5Session(
 			endpoint="{protocol}://{hostname}:{port}/wsman".format(
 				protocol=protocol,
 				hostname=host,
-				port=port))
+				port=port),
+			**kwargs)
 
 	@staticmethod
 	def init_script(script):
