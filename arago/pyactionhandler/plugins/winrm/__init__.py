@@ -102,10 +102,20 @@ class WinRMCmdAction(Action):
 
 	def __call__(self):
 		try:
+			try:
+				READ_TIMEOUT=int(self.parameters.get('ReadTimeout', 30))
+			except ValueError:
+				self.logger.error(
+					("[{anum}] Parameter 'ReadTimeout' with value '{val}' cannot be converted to an integer,"
+					 " using default of 30 instead.").format(
+						 anum=self.num, val=self.parameters.get('ReadTimeout')))
+				READ_TIMEOUT = 30
 			winrm_session = self.init_direct_session(
 				host=self.parameters['Hostname'],
 				protocol='https' if self.parameters['UseSSL'] == 'true' else 'http',
-				port='5986' if self.parameters['UseSSL'] == 'true' else '5985')
+				port='5986' if self.parameters['UseSSL'] == 'true' else '5985',
+				read_timeout_sec=READ_TIMEOUT
+			)
 		except KeyError:
 			self.logger.error("[{anum}] Parameter 'UseSSL' is missing, check your CapabilityYAML file")
 		self.logger.debug("[{anum}] Connecting directly to '{target}'".format(
