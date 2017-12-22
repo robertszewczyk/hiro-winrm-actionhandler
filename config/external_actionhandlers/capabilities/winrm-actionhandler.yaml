@@ -31,6 +31,11 @@
         Use WinRM over SSL, requires a server certificate and a configured SSL endpoint on
         the target machine, true or false
       Value: false
+    - Name: Jumpserver
+      Description: >
+        Connect to the jumpserver first, then connect to the target machine from there. Must be
+        a valid DNS name or disabled
+      Value: disabled
     - Name: ReadTimeout
       Description: >
         Socket read timeout, increase if your Windows boxes are really slow
