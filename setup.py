@@ -8,8 +8,8 @@ import distutils.core
 name = 'winrm-actionhandler'
 
 distutils.core.setup(
-	version = "2.3.1",
 	name=name,
+	version="2.5.0",
 	author="Marcus Klemm",
 	author_email="mklemm@arago.de",
 	description=("ActionHandler for Microsoft Windows"),
