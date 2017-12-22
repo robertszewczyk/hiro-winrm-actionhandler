@@ -7,6 +7,7 @@ from arago.pyactionhandler.plugins.winrm.session import Session
 #from arago.pyactionhandler.plugins.winrm.auth.basic import basicSession
 from arago.pyactionhandler.plugins.winrm.script import Script
 
+from pathlib import Path
 import winrm.exceptions
 import requests.exceptions
 import arago.pyactionhandler.plugins.winrm.exceptions
