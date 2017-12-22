@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import gevent
-from gevent import pywsgi
 from gevent import monkey; monkey.patch_all()
 import sys
 import gevent.hub
 import signal
-import time
+#import time
 from docopt import docopt
 import logging
 import logging.config
