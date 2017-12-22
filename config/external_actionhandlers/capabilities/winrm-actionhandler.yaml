@@ -31,6 +31,11 @@
         Use WinRM over SSL, requires a server certificate and a configured SSL endpoint on
         the target machine, true or false
       Value: false
+    - Name: VerifySSL
+      Description: >
+        Verify the server certificate when using SSL. This value can be either true, false or
+        the path to a custom cabundle
+      Value: false
     - Name: Jumpserver
       Description: >
         Connect to the jumpserver first, then connect to the target machine from there. Must be
