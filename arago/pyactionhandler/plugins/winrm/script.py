@@ -5,7 +5,6 @@ import re, logging
 class Script(object):
 	psWrapper = """\
 $ProgressPreference = "SilentlyContinue"
-$OutputEncoding=[console]::OutputEncoding=[console]::InputEncoding=[system.text.encoding]::GetEncoding([System.Text.Encoding]::Default.CodePage)
 @'
 mode con: cols={cols}
 {script}
@@ -38,11 +37,12 @@ exit $LastExitCode
 		self.cols = cols
 		self.logger = logging.getLogger('root')
 
-	def run(self, Session):
-		self.rs=Session.run_ps(
+	def run(self, Session, **kwargs):
+		self.rs = Session.run_ps(
 			self.wrapper.format(
 				cols=self.cols,
-				script=psesc(self.script)))
+				script=psesc(self.script)),
+			**kwargs)
 
 	def get_outputs(self):
 		stdout = []
