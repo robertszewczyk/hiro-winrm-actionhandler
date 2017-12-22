@@ -3,6 +3,8 @@ import gevent.subprocess
 
 from arago.pyactionhandler.action import Action
 from arago.pyactionhandler.plugins.winrm.auth.kerberos import krb5Session
+from arago.pyactionhandler.plugins.winrm.session import Session
+#from arago.pyactionhandler.plugins.winrm.auth.basic import basicSession
 from arago.pyactionhandler.plugins.winrm.script import Script
 
 import winrm.exceptions
@@ -32,11 +34,11 @@ class WinRMCmdAction(Action):
 		result = re.search(r"authGSSClientStep\(\) failed: \(\((?P<q1>'|\")(?P<major_desc>.+)(?P=q1), (?P<major_code>-?[\d]+)\), \((?P<q2>'|\")(?P<minor_desc>.+)(?P=q2), (?P<minor_code>-?[\d]+)\)\)", err)
 		return result.group('minor_desc') if result else None
 
-	def winrm_run_script(self, winrm_session):
+	def winrm_run_script(self, winrm_session, **kwargs):
 		script = self.init_script(self.parameters['Command'])
 		for i in range(3):
 			try:
-				script.run(winrm_session)
+				script.run(winrm_session, **kwargs)
 				self.output, self.error_output = script.get_outputs()
 				self.system_rc = script.rs.status_code
 				self.success = True
@@ -246,6 +248,7 @@ class WinRMCmdAction(Action):
 			).format(auth=WINRM_AUTH)
 			self.logger.warning(self.statusmsg)
 			return
+		self.winrm_run_script(winrm_session, **kwargs)
 
 
 class WinRMPowershellAction(WinRMCmdAction):
