@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import re, logging
 
 class Script(object):
-	psWrapper="""\
+	psWrapper = """\
 $ProgressPreference = "SilentlyContinue"
 $OutputEncoding=[console]::OutputEncoding=[console]::InputEncoding=[system.text.encoding]::GetEncoding([System.Text.Encoding]::Default.CodePage)
 @'
@@ -12,7 +12,7 @@ mode con: cols={cols}
 '@ | powershell -NoProfile - 2>&1 | %{{$e=@("psout","pserr")[[byte]($_.GetType().Name -eq "ErrorRecord")];return "<$e><![CDATA[$(([string]$_).TrimEnd(" `r`n"))]]></$e>"}} | write-output
 exit $LastExitCode
 """
-	cmdWrapper="""\
+	cmdWrapper = """\
 $ProgressPreference = "SilentlyContinue"
 $t = [IO.Path]::GetTempFileName() | ren -NewName {{ $_ -replace 'tmp$', 'bat' }} -PassThru
 @'
@@ -26,12 +26,15 @@ exit $LastExitCode
 	_illegal = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]')
 
 	def __init__(self, script, interpreter, cols):
-		self.interpreter=interpreter
-		if interpreter=='cmd': self.wrapper=self.cmdWrapper
-		elif interpreter=='ps': self.wrapper=self.psWrapper
-		else: pass
+		self.interpreter = interpreter
+		if interpreter == 'cmd':
+			self.wrapper = self.cmdWrapper
+		elif interpreter == 'ps':
+			self.wrapper = self.psWrapper
+		else:
+			pass
 		self.script = script if script[-1] == "\n" else script + "\n"
-		self.result=None
+		self.result = None
 		self.cols = cols
 		self.logger = logging.getLogger('root')
 
