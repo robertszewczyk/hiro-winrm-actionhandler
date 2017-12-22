@@ -92,34 +92,160 @@ class WinRMCmdAction(Action):
 			break
 
 	def __call__(self):
-		try:
-			READ_TIMEOUT = int(self.parameters.get('ReadTimeout', 30))
-		except ValueError:
-			self.logger.error(
-				("[{anum}] Parameter 'ReadTimeout' with value '{val}' cannot be converted to an integer,"
-				 " using default of 30 instead.").format(
-					 anum=self.num, val=self.parameters.get('ReadTimeout')))
-			READ_TIMEOUT = 30
-		try:
-			USE_SSL = self.parameters.get('UseSSL', 'false')
-			if USE_SSL not in ['true', 'false']:
+		def check_boolean(name):
+			if str(self.parameters.get(name)).lower() in ['true', 'yes', 'on', '1', 'enabled']:
+				return True
+			elif str(self.parameters.get(name)).lower() in ['false', 'no', 'off', '0', 'none', 'disabled']:
+				return False
+			else:
 				raise ValueError
+
+		def check_integer(name, default):
+			try:
+				return int(self.parameters.get(name))
+			except (ValueError, TypeError):
+				try:
+					return int(default)
+				except (ValueError, TypeError):
+					raise ValueError
+
+		def check_file(name):
+			path = Path(str(self.parameters.get(name)))
+			if path.is_file:
+				return path
+			else:
+				raise ValueError
+
+		def check_enum(name, enum=[]):
+			par = self.parameters.get(name)
+			if par in enum:
+				return par
+			else:
+				raise ValueError
+
+		def check_server(name):
+			hostname_regex = re.compile('(?=^.{1,253}$)(^(((?!-)[a-zA-Z0-9-]{1,63}(?<!-))|((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63})$)') # NOQA
+			ipv4_regex = re.compile('(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)') # NOQA
+			par = self.parameters.get(name)
+			if hostname_regex.match(par) or ipv4_regex.match(par):
+				return par
+			else:
+				raise ValueError
+
+		# NOQA Check ReadTimeout
+		try:
+			READ_TIMEOUT = check_integer('ReadTimeout', default=30)
 		except ValueError:
-			self.logger.error(
-				("[{anum}] Parameter 'UseSSL' with value '{val}' is not one of 'true', 'false',"
-				 " using default of 'false' instead.").format(
-					 anum=self.num, val=self.parameters.get('UseSSL')))
-			USE_SSL = 30
-		winrm_session = self.init_direct_session(
-			host=self.parameters['Hostname'],
-			protocol='https' if USE_SSL == 'true' else 'http',
-			port='5986' if USE_SSL == 'true' else '5985',
-			read_timeout_sec=READ_TIMEOUT
-		)
-		self.logger.debug("[{anum}] Connecting directly to '{target}'".format(
-			anum=self.num,
-			target=self.parameters['Hostname']))
-		self.winrm_run_script(winrm_session)
+			self.logger.warning(("[{anum}] Parameter 'ReadTimeout'='{val}' cannot be converted to an integer: "
+								 "Using default of 30 instead."
+			).format(anum=self.num, val=self.parameters.get('ReadTimeout')))
+			READ_TIMEOUT = 30
+
+		# NOQA Check OperationTimeout
+		try:
+			OPERATION_TIMEOUT = check_integer('OperationTimeout', default=20)
+		except ValueError:
+			self.logger.warning(("[{anum}] Parameter 'OperationTimeout'='{val}' cannot be converted to an "
+								 "integer: Using default of 30 instead."
+			).format(anum=self.num, val=self.parameters.get('OperationTimeout')))
+			OPERATION_TIMEOUT = 30
+
+		# NOQA Check if ReadTimeout > OperationTimeout
+		try:
+			assert READ_TIMEOUT > OPERATION_TIMEOUT
+		except AssertionError:
+			self.logger.warning(("[{anum}] Parameter 'ReadTimeout'='{rval}' must be greater than parameter "
+								 "'OperationTimeout'='{oval}': Using 'OperationTimeout' + 10 instead."
+			).format(anum=self.num, rval=READ_TIMEOUT, oval=OPERATION_TIMEOUT))
+			READ_TIMEOUT = OPERATION_TIMEOUT + 10
+
+		# NOQA Check UseSSL parameter
+		try:
+			USE_SSL = check_boolean('UseSSL')
+		except ValueError:
+			self.logger.warning(("[{anum}] Parameter 'UseSSL'='{val}' is not one of 'true', 'false', 'yes', "
+								 "'no', 'on', 'off', '1', '0': Using default of 'false' instead."
+			).format(anum=self.num, val=self.parameters.get('UseSSL')))
+			USE_SSL = False
+
+		# NOQA Check VerifySSL parameter
+		try:
+			VERIFY_SSL = check_boolean('VerifySSL')
+		except ValueError:
+			try:
+				check_file('VerifySSL')
+			except ValueError:
+				self.logger.warning(("[{anum}] Parameter 'VerifySSL'='{val}' is not one of 'true' or 'false' "
+									 "and it not a path to a file, either: Using default of 'true' instead."
+				).format(anum=self.num, val=self.parameters.get('VerifySSL')))
+				VERIFY_SSL = True
+			except PermissionError as e:
+				self.logger.warning(("[{anum}] Cannot open file '{val}' for parameter 'VerifySSL': {err}; "
+									 "Using default of 'true' instead."
+				).format(anum=self.num, val=self.parameters.get('VerifySSL'), err=e))
+				VERIFY_SSL = True
+
+		# NOQA Check DisableTLS12
+		try:
+			DISABLE_TLS_12 = check_boolean('DisableTLS12')
+		except ValueError:
+			self.logger.warning(("[{anum}] Parameter 'DisableTLS12'='{val}' is not one of 'true' or 'false': "
+								 "Using default of 'false' instead"
+				).format(anum=self.num, val=self.parameters.get('DisableTLS12')))
+			DISABLE_TLS_12 = False
+
+		kwargs = {
+			"read_timeout_sec": READ_TIMEOUT,
+			"operation_timeout_sec": OPERATION_TIMEOUT,
+			"credssp_disable_tlsv1_2": DISABLE_TLS_12
+		}
+
+		# NOQA Check Jumpserver parameter
+		try:
+			JUMPSERVER = check_boolean('Jumpserver')
+		except ValueError:
+			try:
+				JUMPSERVER = check_server('Jumpserver')
+			except ValueError:
+				JUMPSERVER = None
+				self.logger.warning(("Parameter 'Jumpserver'='{val}' has to be either an IPv4 address,"
+				                     "a valid DNS name or one of '0', 'false', 'no', 'none' or 'disabled'."
+				                     " Using default of 'none' instead.").format(
+					                     val=self.parameters.get('Jumpserver')))
+
+		# NOQA Construct endpoint URL
+		if USE_SSL == 'true':
+			endpoint = "{protocol}://{hostname}:{port}/wsman".format(
+					protocol='https',
+					hostname=JUMPSERVER if JUMPSERVER else self.parameters.get('Hostname'),
+					port='5986')
+			kwargs['server_cert_validation'] = VERIFY_SSL
+		else:
+			endpoint = "{protocol}://{hostname}:{port}/wsman".format(
+					protocol='http',
+					hostname=JUMPSERVER if JUMPSERVER else self.parameters.get('Hostname'),
+					port='5985')
+
+		# NOQA Check Authentication parameter
+		try:
+			AUTH_METHODS = ['plaintext', 'ntlm', 'credssp', 'kerberos', 'certificate']
+			WINRM_AUTH = check_enum('Authentication', enum=AUTH_METHODS)
+			if WINRM_AUTH in ['plaintext', 'ntlm', 'credssp']:
+				creds = self.parameters['Username'], self.parameters['Password']
+				winrm_session = Session(target=endpoint, transport=WINRM_AUTH, auth=creds, **kwargs)
+			elif WINRM_AUTH == 'kerberos':
+				winrm_session = krb5Session(endpoint=endpoint, **kwargs)
+			elif WINRM_AUTH == 'certificate':
+				self.statusmsg = "Authentication method '{auth}' not yet supported.".format(auth=WINRM_AUTH)
+				self.logger.warning(self.statusmsg)
+				return
+		except ValueError:
+			self.statusmsg = (
+				"Authentication method '{auth}' unknown. Valid authentication methods are "
+				"'plaintext', 'ntlm', 'credssp', 'kerberos' and 'certificate'."
+			).format(auth=WINRM_AUTH)
+			self.logger.warning(self.statusmsg)
+			return
 
 
 class WinRMPowershellAction(WinRMCmdAction):
