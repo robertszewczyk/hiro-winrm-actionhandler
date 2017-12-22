@@ -6,25 +6,55 @@
         Mode: string
         Value: Windows
     Parameter:
+    - Name: Authentication
+      Description: >
+        Method for authentication, valid keywords are: ntlm credssp kerberos
+      Value: kerberos
+    - Name: Username
+      Description: >
+        Login name, use «name» for local accounts and «name@DOMAIN.TLD» for domain
+        accounts. NTLM and CredSSP can use both local and domain accounts, Kerberos
+        can use only domain accounts.
+      Value: Administrator@EXAMPLE.COM
+    - Name: Password
+      Description: >
+        Password to use for NTLM and CredSSP authentication, will be ignored when using
+        Kerberos authentication.
+      Value: 'Pa$$w0rd'
+    - Name: Keytab
+      Description: >
+        Keytab file to use for Kerberos authentication, will be ignored when using NTLM
+        or CredSSP.
+      Value: /opt/autopilot/conf/external_actionhandlers/keytabs/Administrator@EXAMPLE.COM.keytab
+    - Name: UseSSL
+      Description: >
+        Use WinRM over SSL, requires a server certificate and a configured SSL endpoint on
+        the target machine, true or false
+      Value: false
+    - Name: ReadTimeout
+      Description: >
+        Socket read timeout, increase if your Windows boxes are really slow
+        and you are getting errors.
+      Value: 30
+    - Name: OperationTimeout
+      Description: >
+        WSMAN API timeout, increase if your Windows boxes are really slow
+        and you are getting errors, must be smaller than ReadTimeout.
+      Value: 20
+  Capability: 
+  - Name: ExecuteCommand
+    Description: "Execute a DOS Command on a remote Windows machine"
+    Parameter:
     - Name: Command
       Mandatory: true
       Description: "The DOS command to execute"
     - Name: Hostname
       Description: "The hostname of the remote Windows machine"
-    - Name: Username
-      Description: "User account to use, must be user@domain"
-      Default: Administrator@EXAMPLE.COM
-    - Name: Keytab
-      Description: "Kerberos Keytab file"
-      Default: /opt/autopilot/conf/external_actionhandlers/keytabs/Administrator@EXAMPLE.COM.keytab
-    - Name: UseSSL
-      Description: "Use WinRM over SSL, 'true' or 'false'"
-      Default: false
-    - Name: ReadTimeout
-      Description: "Socket read timeout, increase if your Windows boxes are really slow and you're getting errors"
-      Default: 30
-  Capability: 
-  - Name: ExecuteCommand
-    Description: "Execute a DOS Command on a remote Windows machine"
   - Name: ExecutePowershell
     Description: "Execute a Powershell command on a remote Windows machine"
+    Parameter:
+    - Name: Command
+      Mandatory: true
+      Description: "The DOS command to execute"
+    - Name: Hostname
+      Description: "The hostname of the remote Windows machine"
