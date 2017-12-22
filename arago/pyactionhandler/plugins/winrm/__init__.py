@@ -248,6 +248,28 @@ class WinRMCmdAction(Action):
 			).format(auth=WINRM_AUTH)
 			self.logger.warning(self.statusmsg)
 			return
+		kwargs = {}
+		if JUMPSERVER:
+			kwargs['target'] = self.parameters.get('Hostname')
+			if (WINRM_AUTH in ['plaintext', 'ntlm']
+				and self.parameters.get('Username')
+				and self.parameters.get('Password')):
+				kwargs['creds'] = self.parameters.get('Username'), self.parameters.get('Password')
+			elif (WINRM_AUTH in ['plaintext', 'ntlm']
+				  and not (self.parameters.get('Username') and self.parameters.get('Password'))):
+				self.logger.error("mist!")
+				return
+			if USE_SSL:
+				kwargs['use_ssl'] = True
+
+			self.logger.debug("[{anum}] Connecting to '{target}' via jumpserver '{jmp}'".format(
+				anum=self.num,
+				target=self.parameters['Hostname'],
+				jmp=self.parameters['Jumpserver']
+			))
+		else:
+			self.logger.debug("[{anum}] Connecting directly to '{target}'".format(
+				anum=self.num, target=self.parameters['Hostname']))
 		self.winrm_run_script(winrm_session, **kwargs)
 
 
