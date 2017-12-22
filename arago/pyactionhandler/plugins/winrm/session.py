@@ -4,8 +4,12 @@ import urllib.parse as urlparse
 
 import arago.pyactionhandler.plugins.winrm.exceptions
 import requests.exceptions
+import logging
 
 class Session(winrm.Session):
+	def __init__(self, *args, **kwargs):
+		self.logger = logging.getLogger('root')
+		return super().__init__(*args, **kwargs)
 
 	def run_ps(self, script):
 		"""base64 encodes a Powershell script and executes the powershell encoded script command"""
