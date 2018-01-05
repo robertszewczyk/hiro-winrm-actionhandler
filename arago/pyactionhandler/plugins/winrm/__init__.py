@@ -248,7 +248,7 @@ class WinRMCmdAction(Action):
 			self.statusmsg = (
 				"Authentication method '{auth}' unknown. Valid authentication methods are "
 				"'plaintext', 'ntlm', 'credssp', 'kerberos' and 'certificate'."
-			).format(auth=WINRM_AUTH) # FIXME: If Authentication is missing, it crashes!
+			).format(auth=WINRM_AUTH)
 			self.logger.error(self.statusmsg)
 			return
 		except NameError:
