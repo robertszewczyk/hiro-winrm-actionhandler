@@ -123,6 +123,8 @@ class WinRMCmdAction(Action):
 			par = self.parameters.get(name)
 			if par in enum:
 				return par
+			elif par is None:
+				raise NameError
 			else:
 				raise ValueError
 
@@ -246,8 +248,14 @@ class WinRMCmdAction(Action):
 			self.statusmsg = (
 				"Authentication method '{auth}' unknown. Valid authentication methods are "
 				"'plaintext', 'ntlm', 'credssp', 'kerberos' and 'certificate'."
-			).format(auth=WINRM_AUTH)
-			self.logger.warning(self.statusmsg)
+			).format(auth=WINRM_AUTH) # FIXME: If Authentication is missing, it crashes!
+			self.logger.error(self.statusmsg)
+			return
+		except NameError:
+			self.statusmsg = (
+				"Parameter 'Authentication' is missing. Please check "
+				"/opt/autopilot/conf/external_actionhandlers/capabilities/winrm-actionhandler.yaml")
+			self.logger.error(self.statusmsg)
 			return
 		kwargs = {}
 		if JUMPSERVER:
