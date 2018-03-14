@@ -36,6 +36,11 @@
         Verify the server certificate when using SSL. This value can be either true, false or
         the path to a custom cabundle
       Value: false
+    - Name: MessageEncryption
+      Description: >
+        Use message encryption for non-TLS connections. Must be set to never for
+        compatibility with Windows Server 2003. Valid keywords are: always never auto
+      Value: auto
     - Name: Jumpserver
       Description: >
         Connect to the jumpserver first, then connect to the target machine from there. Must be
