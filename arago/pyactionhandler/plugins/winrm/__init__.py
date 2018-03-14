@@ -177,11 +177,11 @@ class WinRMCmdAction(Action):
 
 		try:
 			MSG_ENC_VALS = ['plaintext', 'ntlm', 'credssp', 'kerberos', 'certificate']
-			MSG_ENC = check_enum('KerberosMessageEncryption', enum=MSG_ENC_VALS)
+			MSG_ENC = check_enum('MessageEncryption', enum=MSG_ENC_VALS)
 		except ValueError:
-			self.logger.warning(("[{anum}] Parameter 'KerberosMessageEncryption'='{val}' must be 'always', 'never' or 'auto'! "
+			self.logger.warning(("[{anum}] Parameter 'MessageEncryption'='{val}' must be 'always', 'never' or 'auto'! "
 			                     "Using default of 'auto'."
-			).format(anum=self.num, val=self.parameters.get('KerberosMessageEncryption')))
+			).format(anum=self.num, val=self.parameters.get('MessageEncryption')))
 			MSG_ENC = 'auto'
 
 		# NOQA Check VerifySSL parameter
