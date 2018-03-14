@@ -173,6 +173,17 @@ class WinRMCmdAction(Action):
 			).format(anum=self.num, val=self.parameters.get('UseSSL')))
 			USE_SSL = False
 
+		# NOQA Check MessageEnryption parameter
+
+		try:
+			MSG_ENC_VALS = ['plaintext', 'ntlm', 'credssp', 'kerberos', 'certificate']
+			MSG_ENC = check_enum('KerberosMessageEncryption', enum=KRB5_MSG_ENC_VALS)
+		except ValueError:
+			self.logger.warning(("[{anum}] Parameter 'KerberosMessageEncryption'='{val}' must be 'always', 'never' or 'auto'! "
+			                     "Using default of 'auto'."
+			).format(anum=self.num, val=self.parameters.get('KerberosMessageEncryption')))
+			MSG_ENC = 'auto'
+
 		# NOQA Check VerifySSL parameter
 		try:
 			VERIFY_SSL = check_boolean('VerifySSL')
@@ -202,7 +213,8 @@ class WinRMCmdAction(Action):
 		kwargs = {
 			"read_timeout_sec": READ_TIMEOUT,
 			"operation_timeout_sec": OPERATION_TIMEOUT,
-			"credssp_disable_tlsv1_2": DISABLE_TLS_12
+			"credssp_disable_tlsv1_2": DISABLE_TLS_12,
+			"message_encryption": MSG_ENC
 		}
 
 		# NOQA Check Jumpserver parameter
