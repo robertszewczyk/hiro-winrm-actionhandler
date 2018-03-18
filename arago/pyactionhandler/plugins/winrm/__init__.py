@@ -176,7 +176,7 @@ class WinRMCmdAction(Action):
 		# NOQA Check MessageEnryption parameter
 
 		try:
-			MSG_ENC_VALS = ['plaintext', 'ntlm', 'credssp', 'kerberos', 'certificate']
+			MSG_ENC_VALS = ['always', 'never', 'auto']
 			MSG_ENC = check_enum('MessageEncryption', enum=MSG_ENC_VALS)
 		except ValueError:
 			self.logger.warning(("[{anum}] Parameter 'MessageEncryption'='{val}' must be 'always', 'never' or 'auto'! "
