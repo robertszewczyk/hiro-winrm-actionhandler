@@ -183,6 +183,12 @@ class WinRMCmdAction(Action):
 			                     "Using default of 'auto'."
 			).format(anum=self.num, val=self.parameters.get('MessageEncryption')))
 			MSG_ENC = 'auto'
+		except NameError:
+			self.logger.warning(("[{anum}] Parameter 'MessageEncryption' is missing! Please check "
+			                     "/opt/autopilot/conf/external_actionhandlers/capabilities/winrm-actionhandler.yaml. "
+			                     "Using default of 'auto'."
+			).format(anum=self.num, val=self.parameters.get('MessageEncryption')))
+			MSG_ENC = 'auto'
 
 		# NOQA Check VerifySSL parameter
 		try:
