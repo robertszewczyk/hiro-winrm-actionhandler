@@ -220,7 +220,8 @@ class WinRMCmdAction(Action):
 			"read_timeout_sec": READ_TIMEOUT,
 			"operation_timeout_sec": OPERATION_TIMEOUT,
 			"credssp_disable_tlsv1_2": DISABLE_TLS_12,
-			"message_encryption": MSG_ENC
+			"message_encryption": MSG_ENC,
+			"service": "WSMAN"
 		}
 
 		# NOQA Check Jumpserver parameter
