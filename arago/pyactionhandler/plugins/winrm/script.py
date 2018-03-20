@@ -5,10 +5,12 @@ import re, logging
 class Script(object):
 	psWrapper = """\
 $ProgressPreference = "SilentlyContinue"
-@'
+$r = $(@'
 mode con: cols={cols}
 {script}
-'@ | powershell -NoProfile - 2>&1 | %{{$e=@("psout","pserr")[[byte]($_.GetType().Name -eq "ErrorRecord")];return "<$e><![CDATA[$(([string]$_).TrimEnd(" `r`n"))]]></$e>"}} | write-output
+'@ | powershell -NoProfile - 2>&1)
+mode con: cols=1052
+$r | %{{$e=@("psout","pserr")[[byte]($_.GetType().Name -eq "ErrorRecord")];return "<$e><![CDATA[$(([string]$_).TrimEnd(" `r`n"))]]></$e>"}} | write-output
 exit $LastExitCode
 """
 	cmdWrapper = """\
@@ -18,7 +20,8 @@ $t = [IO.Path]::GetTempFileName() | ren -NewName {{ $_ -replace 'tmp$', 'bat' }}
 mode con: cols={cols}
 {script}
 '@ | out-file -encoding "OEM" $t
-& cmd.exe /q /c $t 2>&1 | %{{$e=@("psout","pserr")[[byte]($_.GetType().Name -eq "ErrorRecord")];return "<$e><![CDATA[$(([string]$_).TrimEnd(" `r`n"))]]></$e>"}} | write-output
+& mode con: cols=1052
+$ cmd.exe /q /c $t 2>&1 | %{{$e=@("psout","pserr")[[byte]($_.GetType().Name -eq "ErrorRecord")];return "<$e><![CDATA[$(([string]$_).TrimEnd(" `r`n"))]]></$e>"}} | write-output
 rm $t
 exit $LastExitCode
 """
