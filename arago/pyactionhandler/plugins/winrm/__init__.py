@@ -167,6 +167,7 @@ class WinRMCmdAction(Action):
 		# NOQA Check UseSSL parameter
 		try:
 			USE_SSL = check_boolean('UseSSL')
+			self.logger.debug("[{anum}] UseSSL: {ssl}".format(anum=self.num, ssl=USE_SSL))
 		except ValueError:
 			self.logger.warning(("[{anum}] Parameter 'UseSSL'='{val}' is not one of 'true', 'false', 'yes', "
 								 "'no', 'on', 'off', '1', '0': Using default of 'false' instead."
@@ -195,7 +196,7 @@ class WinRMCmdAction(Action):
 			VERIFY_SSL = check_boolean('VerifySSL')
 		except ValueError:
 			try:
-				check_file('VerifySSL')
+				VERIFY_SSL = check_file('VerifySSL')
 			except ValueError:
 				self.logger.warning(("[{anum}] Parameter 'VerifySSL'='{val}' is not one of 'true' or 'false' "
 									 "and it not a path to a file, either: Using default of 'true' instead."
@@ -238,12 +239,18 @@ class WinRMCmdAction(Action):
 					                     val=self.parameters.get('Jumpserver')))
 
 		# NOQA Construct endpoint URL
-		if USE_SSL == 'true':
+		if USE_SSL:
 			endpoint = "{protocol}://{hostname}:{port}/wsman".format(
 					protocol='https',
 					hostname=JUMPSERVER if JUMPSERVER else self.parameters.get('Hostname'),
 					port='5986')
-			kwargs['server_cert_validation'] = VERIFY_SSL
+			if VERIFY_SSL == True:
+				kwargs['server_cert_validation'] = 'validate'
+			elif VERIFY_SSL == False:
+				kwargs['server_cert_validation'] = 'ignore'
+			elif VERIFY_SSL:
+				kwargs['server_cert_validation'] = 'validate'
+				kwargs['ca_trust_path'] = VERIFY_SSL
 		else:
 			endpoint = "{protocol}://{hostname}:{port}/wsman".format(
 					protocol='http',
