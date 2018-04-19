@@ -21,7 +21,7 @@ mode con: cols={cols}
 {script}
 '@ | out-file -encoding "OEM" $t
 & mode con: cols=1052
-$ cmd.exe /q /c $t 2>&1 | %{{$e=@("psout","pserr")[[byte]($_.GetType().Name -eq "ErrorRecord")];return "<$e><![CDATA[$(([string]$_).TrimEnd(" `r`n"))]]></$e>"}} | write-output
+& cmd.exe /q /c $t 2>&1 | %{{$e=@("psout","pserr")[[byte]($_.GetType().Name -eq "ErrorRecord")];return "<$e><![CDATA[$(([string]$_).TrimEnd(" `r`n"))]]></$e>"}} | write-output
 rm $t
 exit $LastExitCode
 """
