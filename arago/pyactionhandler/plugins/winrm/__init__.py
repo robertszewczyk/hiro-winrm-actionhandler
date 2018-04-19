@@ -1,5 +1,4 @@
 import gevent
-import gevent.subprocess
 
 from arago.pyactionhandler.action import Action
 from arago.pyactionhandler.plugins.winrm.auth.kerberos import krb5Session
@@ -12,9 +11,6 @@ import winrm.exceptions
 import requests.exceptions
 import arago.pyactionhandler.plugins.winrm.exceptions
 import logging
-import re
-
-from requests_kerberos.exceptions import KerberosExchangeError
 
 
 
@@ -31,68 +27,24 @@ class WinRMCmdAction(Action):
 			interpreter='cmd',
 			cols=120)
 
-	def parse_krb5_err(self, err):
-		result = re.search(r"authGSSClientStep\(\) failed: \(\((?P<q1>'|\")(?P<major_desc>.+)(?P=q1), (?P<major_code>-?[\d]+)\), \((?P<q2>'|\")(?P<minor_desc>.+)(?P=q2), (?P<minor_code>-?[\d]+)\)\)", err)
-		return result.group('minor_desc') if result else None
-
 	def winrm_run_script(self, winrm_session, **kwargs):
 		script = self.init_script(self.parameters['Command'])
-		for i in range(3):
-			try:
-				script.run(winrm_session, **kwargs)
-				self.output, self.error_output = script.get_outputs()
-				self.system_rc = script.rs.status_code
-				self.success = True
-			except KerberosExchangeError as e:
-				parsed_err = self.parse_krb5_err(str(e))
-				self.statusmsg = str(e)
-				self.success = False
-				self.system_rc = -1
-				if (parsed_err == "Ticket expired"
-					or (parsed_err.startswith("Credentials cache file ") and parsed_err.endswith(" not found"))):
-					self.logger.warning("[{anum}] No Kerberos ticket for {host}, requesting one ...".format(
-						anum=self.num, host=self.parameters['Hostname']))
-					self.statusmsg = "Authentication failed."
-					try:
-						with open(self.parameters['Keytab']):
-							pass
-						gevent.subprocess.check_output(
-							["kinit", "-k", "-t", self.parameters['Keytab'], self.parameters['Username']],
-							timeout=30, stderr=gevent.subprocess.STDOUT)
-						self.logger.info("[{anum}] Successfully retrieved Kerberos ticket for {host}, retrying command execution.".format(
-							anum=self.num, host=self.parameters['Hostname']))
-					except gevent.subprocess.CalledProcessError as e:
-						self.logger.error("[{anum}] Retrieving Kerberos ticket for {host} failed: {err}".format(
-							anum=self.num, host=self.parameters['Hostname'], err=e.output.decode("utf-8")))
-					except gevent.subprocess.TimeoutExpired as e:
-						self.logger.error("[{anum}] Retrieving Kerberos ticket for {host} timed out!".format(
-							anum=self.num, host=self.parameters['Hostname']))
-					except FileNotFoundError as e:
-						self.logger.error("[{anum}] Retrieving Kerberos ticket for {host} failed: {err}".format(
-							anum=self.num, host=self.parameters['Hostname'], err=e))
-					except KeyError:
-						self.logger.error("[{anum}] Retrieving Kerberos ticket for {host} failed! Credentials missing!".format(
-							anum=self.num, host=self.parameters['Hostname']))
-					continue
-				elif parsed_err:
-					self.logger.error("[{anum}] An error occured during command execution on {node}: Kerberos: {err}".format(
-						anum=self.num, node=self.node, err=parsed_err))
-					self.statusmsg = parsed_err
-				else:
-					self.logger.error("[{anum}] An error occured during command execution on {node}: Kerberos: {err}".format(
-						anum=self.num, node=self.node, err=str(e)))
-			except (
-					winrm.exceptions.WinRMError,
-					winrm.exceptions.WinRMTransportError,
-					arago.pyactionhandler.plugins.winrm.exceptions.WinRMError,
-					requests.exceptions.RequestException
-			) as e:
-				self.statusmsg = str(e)
-				self.success = False
-				self.system_rc = -1
-				self.logger.error("[{anum}] An error occured during command execution on {node}: {err}".format(
-					anum=self.num, node=self.node, err=str(e)))
-			break
+		try:
+			script.run(winrm_session, **kwargs)
+			self.output, self.error_output = script.get_outputs()
+			self.system_rc = script.rs.status_code
+			self.success = True
+		except (
+				winrm.exceptions.WinRMError,
+				winrm.exceptions.WinRMTransportError,
+				arago.pyactionhandler.plugins.winrm.exceptions.WinRMError,
+				requests.exceptions.RequestException
+		) as e:
+			self.statusmsg = str(e)
+			self.success = False
+			self.system_rc = -1
+			self.logger.error("[{anum}] An error occured during command execution on {node}: {err}".format(
+				anum=self.num, node=self.node, err=str(e)))
 
 	def __call__(self):
 		def check_boolean(name):
@@ -167,7 +119,6 @@ class WinRMCmdAction(Action):
 		# NOQA Check UseSSL parameter
 		try:
 			USE_SSL = check_boolean('UseSSL')
-			self.logger.debug("[{anum}] UseSSL: {ssl}".format(anum=self.num, ssl=USE_SSL))
 		except ValueError:
 			self.logger.warning(("[{anum}] Parameter 'UseSSL'='{val}' is not one of 'true', 'false', 'yes', "
 								 "'no', 'on', 'off', '1', '0': Using default of 'false' instead."
@@ -265,7 +216,7 @@ class WinRMCmdAction(Action):
 				creds = self.parameters['Username'], self.parameters['Password']
 				winrm_session = Session(target=endpoint, transport=WINRM_AUTH, auth=creds, **kwargs)
 			elif WINRM_AUTH == 'kerberos':
-				winrm_session = krb5Session(endpoint=endpoint, **kwargs)
+				winrm_session = krb5Session(endpoint=endpoint, username=self.parameters['Username'], keytab=self.parameters['Keytab'], num=self.num, **kwargs)
 			elif WINRM_AUTH == 'certificate':
 				self.statusmsg = "Authentication method '{auth}' not yet supported.".format(auth=WINRM_AUTH)
 				self.logger.warning(self.statusmsg)
@@ -277,7 +228,8 @@ class WinRMCmdAction(Action):
 			).format(auth=WINRM_AUTH)
 			self.logger.error(self.statusmsg)
 			return
-		except NameError:
+		except NameError as e:
+			print(e)
 			self.statusmsg = (
 				"Parameter 'Authentication' is missing. Please check "
 				"/opt/autopilot/conf/external_actionhandlers/capabilities/winrm-actionhandler.yaml")
@@ -303,7 +255,7 @@ class WinRMCmdAction(Action):
 				jmp=self.parameters['Jumpserver']
 			))
 		else:
-			self.logger.debug("[{anum}] Connecting directly to '{target}'".format(
+			self.logger.debug("[{anum}] Executing directly on '{target}'".format(
 				anum=self.num, target=self.parameters['Hostname']))
 		self.winrm_run_script(winrm_session, **kwargs)
 
