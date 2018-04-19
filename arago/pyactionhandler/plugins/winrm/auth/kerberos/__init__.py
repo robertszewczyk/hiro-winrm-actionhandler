@@ -22,6 +22,16 @@ class krb5Session(Session):
 				self.logger = logging.getLogger('root')
 				test_msg = """<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:wsmid="http://schemas.dmtf.org/wbem/wsman/identity/1/wsmanidentity.xsd"><s:Header/><s:Body><wsmid:Identify/></s:Body></s:Envelope>"""
 				test_resp = self.protocol.send_message(test_msg)
+				#print(test_resp)
+				test_resp_xml = ET.fromstring(test_resp.decode('utf-8'))
+				self.logger.debug(
+					"[{anum}] Connected to WSMAN service at {host}, Vendor: {ven}, Version: {ver}".format(
+						anum=num, host=endpoint,
+						ven=test_resp_xml.findtext(
+							".//{http://schemas.dmtf.org/wbem/wsman/identity/1/wsmanidentity.xsd}ProductVendor"),
+						ver=test_resp_xml.findtext(
+							".//{http://schemas.dmtf.org/wbem/wsman/identity/1/wsmanidentity.xsd}ProductVersion")
+					))
 				break
 			except KerberosExchangeError as e:
 				parsed_err = self.parse_krb5_err(str(e))
